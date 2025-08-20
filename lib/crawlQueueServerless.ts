@@ -83,13 +83,17 @@ export class CrawlQueueServerless {
   }
 
   getProgress(): CrawlProgress {
+    const isComplete = this.pagesCrawled.length >= this.options.maxPages || 
+                      this.queue.length === 0 || 
+                      this.isCancelled
+    
     return {
       pagesQueued: this.queue.length,
       pagesDone: this.pagesCrawled.length,
       pagesError: this.errors.length,
       currentUrl: this.queue[0] || '',
       colorsFound: this.allColors.length,
-      isComplete: !this.isRunning && this.queue.length === 0
+      isComplete
     }
   }
 
@@ -129,6 +133,12 @@ export class CrawlQueueServerless {
         console.log(`Crawling page ${this.pagesCrawled.length + 1}/${this.options.maxPages}: ${url}`)
         await this.crawlPage(url)
         
+        // Check if we've reached max pages after this crawl
+        if (this.pagesCrawled.length >= this.options.maxPages) {
+          console.log(`Reached maximum pages limit (${this.options.maxPages}), stopping crawl`)
+          break
+        }
+        
         // Respect crawl delay but with minimum
         const delay = Math.max(this.robotsInfo?.crawlDelay || 1000, 500) // Minimum 500ms delay
         await new Promise(resolve => setTimeout(resolve, delay))
@@ -147,6 +157,12 @@ export class CrawlQueueServerless {
         continue
       }
     }
+    
+    // Ensure we stop processing when done
+    console.log(`Crawl completed. Pages crawled: ${this.pagesCrawled.length}, Colors found: ${this.allColors.length}`)
+    
+    // Clear the queue to ensure completion is detected
+    this.queue.length = 0
   }
 
   private async crawlPage(url: string): Promise<void> {
@@ -191,11 +207,13 @@ export class CrawlQueueServerless {
       const parsed = parseHTML(html, url)
       this.allColors.push(...parsed.colors)
       
-      // Process CSS files
-      await this.processCSSFiles(parsed.links, url)
+      // Process CSS files only if we haven't reached max pages
+      if (this.pagesCrawled.length < this.options.maxPages) {
+        await this.processCSSFiles(parsed.links, url)
+      }
       
-      // Add new links to queue (respecting depth limit)
-      if (this.getUrlDepth(url) < this.options.maxDepth) {
+      // Add new links to queue (respecting depth limit) only if we haven't reached max pages
+      if (this.getUrlDepth(url) < this.options.maxDepth && this.pagesCrawled.length < this.options.maxPages) {
         // Filter and limit links to prevent overwhelming the queue
         const validLinks = parsed.links
           .slice(0, 20) // Limit links per page

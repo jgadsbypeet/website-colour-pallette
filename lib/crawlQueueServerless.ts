@@ -22,7 +22,7 @@ export interface CrawlProgress {
 }
 
 export interface CrawlResult {
-  colors: ColorInfo[]
+  colors: NormalizedColor[]
   pagesCrawled: string[]
   errors: string[]
   totalColors: number

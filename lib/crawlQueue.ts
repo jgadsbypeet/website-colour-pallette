@@ -222,7 +222,7 @@ export class CrawlQueue {
             
             // Parse each style property
             Object.entries(styles).forEach(([property, value]) => {
-              if (value && value !== 'rgba(0, 0, 0, 0)' && value !== 'transparent') {
+              if (value && typeof value === 'string' && value !== 'rgba(0, 0, 0, 0)' && value !== 'transparent') {
                 const color = this.parseColorWithSource(value, `${source} (computed ${property})`)
                 if (color) colors.push(color)
               }

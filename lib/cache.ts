@@ -21,7 +21,9 @@ export class Cache<T> {
     // Remove oldest entry if at max size
     if (this.cache.size >= this.maxSize) {
       const oldestKey = this.cache.keys().next().value
-      this.cache.delete(oldestKey)
+      if (oldestKey) {
+        this.cache.delete(oldestKey)
+      }
     }
     
     this.cache.set(key, {
@@ -63,10 +65,14 @@ export class Cache<T> {
 
   private cleanup(): void {
     const now = Date.now()
-    for (const [key, entry] of this.cache.entries()) {
+    const keysToDelete: string[] = []
+    
+    this.cache.forEach((entry, key) => {
       if (now - entry.timestamp > entry.ttl) {
-        this.cache.delete(key)
+        keysToDelete.push(key)
       }
-    }
+    })
+    
+    keysToDelete.forEach(key => this.cache.delete(key))
   }
 }

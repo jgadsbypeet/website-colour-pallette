@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Site for Color Crawler</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Inline styles with various color formats */
+        .inline-red { color: #FF0000; }
+        .inline-rgb { background-color: rgb(0, 255, 0); }
+        .inline-rgba { border-color: rgba(0, 0, 255, 0.5); }
+        .inline-hsl { color: hsl(60, 100%, 50%); }
+        .inline-hsla { background-color: hsla(300, 100%, 50%, 0.8); }
+        .inline-named { color: purple; }
+        .inline-var { color: var(--primary-color); }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 style="color: #333333;">Test Site</h1>
+        <nav>
+            <a href="page2.html" style="color: #0066CC;">Page 2</a>
+            <a href="page3.html" style="color: #CC6600;">Page 3</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero" style="background-color: var(--accent-color);">
+            <h2 style="color: #FFFFFF;">Welcome to our test site</h2>
+            <p style="color: #F0F0F0;">This page contains various color formats for testing.</p>
+        </section>
+
+        <section class="colors">
+            <h3 style="color: #444444;">Color Examples</h3>
+            
+            <div class="color-grid">
+                <div class="color-item" style="background-color: #FF0000; color: #FFFFFF;">
+                    <span>Red (#FF0000)</span>
+                </div>
+                <div class="color-item" style="background-color: #00FF00; color: #000000;">
+                    <span>Green (#00FF00)</span>
+                </div>
+                <div class="color-item" style="background-color: #0000FF; color: #FFFFFF;">
+                    <span>Blue (#0000FF)</span>
+                </div>
+                <div class="color-item" style="background-color: #FFFF00; color: #000000;">
+                    <span>Yellow (#FFFF00)</span>
+                </div>
+                <div class="color-item" style="background-color: #FF00FF; color: #FFFFFF;">
+                    <span>Magenta (#FF00FF)</span>
+                </div>
+                <div class="color-item" style="background-color: #00FFFF; color: #000000;">
+                    <span>Cyan (#00FFFF)</span>
+                </div>
+            </div>
+
+            <div class="rgba-examples">
+                <h4 style="color: #666666;">RGBA Examples</h4>
+                <div style="background-color: rgba(255, 0, 0, 0.3); padding: 10px; margin: 5px;">
+                    <span style="color: #333333;">Red with 30% opacity</span>
+                </div>
+                <div style="background-color: rgba(0, 255, 0, 0.7); padding: 10px; margin: 5px;">
+                    <span style="color: #333333;">Green with 70% opacity</span>
+                </div>
+            </div>
+
+            <div class="hsl-examples">
+                <h4 style="color: #666666;">HSL Examples</h4>
+                <div style="background-color: hsl(120, 100%, 50%); padding: 10px; margin: 5px;">
+                    <span style="color: #FFFFFF;">Pure green (HSL)</span>
+                </div>
+                <div style="background-color: hsl(240, 100%, 50%); padding: 10px; margin: 5px;">
+                    <span style="color: #FFFFFF;">Pure blue (HSL)</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="css-variables">
+            <h3 style="color: #444444;">CSS Variables</h3>
+            <p style="color: var(--text-color);">This text uses a CSS variable for color.</p>
+            <div style="background-color: var(--secondary-color); padding: 15px; margin: 10px 0;">
+                <p style="color: var(--text-color);">This div uses CSS variables for background and text.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer style="background-color: #222222; color: #CCCCCC; padding: 20px; margin-top: 40px;">
+        <p>&copy; 2024 Test Site. Built for color crawler testing.</p>
+    </footer>
+</body>
+</html> 

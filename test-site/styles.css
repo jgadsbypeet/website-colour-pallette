@@ -1,0 +1,203 @@
+/* CSS Variables */
+:root {
+    --primary-color: #3B82F6;
+    --secondary-color: #10B981;
+    --accent-color: #F59E0B;
+    --text-color: #1F2937;
+    --background-color: #FFFFFF;
+    --border-color: #E5E7EB;
+    --success-color: #059669;
+    --warning-color: #D97706;
+    --error-color: #DC2626;
+    --info-color: #2563EB;
+}
+
+/* Base styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 0;
+}
+
+/* Header styles */
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+nav {
+    margin-top: 1rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-right: 1.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.2s;
+}
+
+nav a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Main content */
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.hero {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    padding: 3rem 2rem;
+    border-radius: 0.75rem;
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.hero h2 {
+    font-size: 2.5rem;
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+.hero p {
+    font-size: 1.25rem;
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Color examples */
+.colors {
+    margin-bottom: 3rem;
+}
+
+.colors h3 {
+    font-size: 1.875rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.color-item {
+    padding: 2rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.color-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.rgba-examples, .hsl-examples {
+    margin-bottom: 2rem;
+}
+
+.rgba-examples h4, .hsl-examples h4 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+/* CSS Variables section */
+.css-variables {
+    background-color: var(--border-color);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.css-variables h3 {
+    font-size: 1.875rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+}
+
+/* Utility classes */
+.text-primary { color: var(--primary-color); }
+.text-secondary { color: var(--secondary-color); }
+.text-success { color: var(--success-color); }
+.text-warning { color: var(--warning-color); }
+.text-error { color: var(--error-color); }
+.text-info { color: var(--info-color); }
+
+.bg-primary { background-color: var(--primary-color); }
+.bg-secondary { background-color: var(--secondary-color); }
+.bg-success { background-color: var(--success-color); }
+.bg-warning { background-color: var(--warning-color); }
+.bg-error { background-color: var(--error-color); }
+.bg-info { background-color: var(--info-color); }
+
+/* Responsive design */
+@media (max-width: 768px) {
+    header {
+        padding: 1rem;
+    }
+    
+    header h1 {
+        font-size: 1.5rem;
+    }
+    
+    main {
+        padding: 1rem;
+    }
+    
+    .hero {
+        padding: 2rem 1rem;
+    }
+    
+    .hero h2 {
+        font-size: 2rem;
+    }
+    
+    .color-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Additional color classes for testing */
+.test-hex { color: #FF6B6B; }
+.test-rgb { color: rgb(118, 68, 138); }
+.test-rgba { color: rgba(255, 107, 107, 0.8); }
+.test-hsl { color: hsl(200, 100%, 50%); }
+.test-hsla { color: hsla(200, 100%, 50%, 0.7); }
+.test-named { color: teal; }
+
+/* Complex color combinations */
+.gradient-bg {
+    background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1);
+}
+
+.shadow-text {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.border-multi {
+    border: 3px solid #FF6B6B;
+    border-left-color: #4ECDC4;
+    border-right-color: #45B7D1;
+} 

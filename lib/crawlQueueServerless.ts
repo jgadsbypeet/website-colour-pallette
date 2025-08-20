@@ -110,36 +110,79 @@ export class CrawlQueueServerless {
   }
 
   private async processQueue(): Promise<void> {
+    const startTime = Date.now()
+    const maxCrawlTime = 5 * 60 * 1000 // 5 minute maximum crawl time
+    
     while (this.queue.length > 0 && !this.isCancelled && this.pagesCrawled.length < this.options.maxPages) {
+      // Check for timeout
+      if (Date.now() - startTime > maxCrawlTime) {
+        this.errors.push('Crawl timeout: Maximum crawl time exceeded (5 minutes)')
+        break
+      }
+      
       const url = this.queue.shift()!
       
       if (this.visited.has(url)) continue
       this.visited.add(url)
       
       try {
+        console.log(`Crawling page ${this.pagesCrawled.length + 1}/${this.options.maxPages}: ${url}`)
         await this.crawlPage(url)
         
-        // Respect crawl delay
-        if (this.robotsInfo?.crawlDelay) {
-          await new Promise(resolve => setTimeout(resolve, this.robotsInfo.crawlDelay))
+        // Respect crawl delay but with minimum
+        const delay = Math.max(this.robotsInfo?.crawlDelay || 1000, 500) // Minimum 500ms delay
+        await new Promise(resolve => setTimeout(resolve, delay))
+        
+        // Early termination if we have enough colors
+        if (this.allColors.length > 1000) {
+          console.log('Early termination: Found sufficient colors (>1000)')
+          break
         }
         
       } catch (error) {
         this.errors.push(`Failed to crawl ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        console.warn(`Error crawling ${url}:`, error)
+        
+        // Continue with next URL instead of failing completely
+        continue
       }
     }
   }
 
   private async crawlPage(url: string): Promise<void> {
     try {
+      // Add timeout and better error handling
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+      
       const response = await fetch(url, {
         headers: {
-          'User-Agent': this.robotsInfo?.userAgent || 'Website-Color-Palette-Crawler/1.0'
-        }
+          'User-Agent': this.robotsInfo?.userAgent || 'Website-Color-Palette-Crawler/1.0',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
+        },
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId)
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      // Check content type to ensure we're processing HTML
+      const contentType = response.headers.get('content-type') || ''
+      if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
+        throw new Error(`Invalid content type: ${contentType}`)
+      }
+
+      // Limit response size to prevent memory issues
+      const contentLength = response.headers.get('content-length')
+      if (contentLength && parseInt(contentLength) > 5 * 1024 * 1024) { // 5MB limit
+        throw new Error('Response too large (>5MB)')
       }
 
       const html = await response.text()
@@ -153,18 +196,71 @@ export class CrawlQueueServerless {
       
       // Add new links to queue (respecting depth limit)
       if (this.getUrlDepth(url) < this.options.maxDepth) {
-        for (const link of parsed.links) {
-          const normalizedLink = normalizeUrl(link, this.baseUrl)
-          if (normalizedLink && this.shouldCrawlLink(normalizedLink) && !this.visited.has(normalizedLink)) {
-            this.queue.push(normalizedLink)
-          }
-        }
+        // Filter and limit links to prevent overwhelming the queue
+        const validLinks = parsed.links
+          .slice(0, 20) // Limit links per page
+          .map(link => normalizeUrl(link, this.baseUrl))
+          .filter(link => 
+            link && 
+            this.shouldCrawlLink(link) && 
+            !this.visited.has(link) &&
+            !this.queue.includes(link) && // Prevent duplicates in queue
+            !this.isProblematicUrl(link) // Filter out problematic URLs
+          )
+        
+        this.queue.push(...validLinks.slice(0, 10)) // Limit new URLs added per page
       }
       
       this.pagesCrawled.push(url)
       
     } catch (error) {
       throw new Error(`Failed to fetch ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  private isProblematicUrl(url: string): boolean {
+    try {
+      const urlObj = new URL(url)
+      const pathname = urlObj.pathname.toLowerCase()
+      const search = urlObj.search.toLowerCase()
+      
+      // Filter out problematic file types
+      const problematicExtensions = [
+        '.svg', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+        '.zip', '.rar', '.tar', '.gz', '.mp4', '.avi', '.mov', '.mp3',
+        '.wav', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.webp',
+        '.woff', '.woff2', '.ttf', '.eot', '.otf'
+      ]
+      
+      if (problematicExtensions.some(ext => pathname.endsWith(ext))) {
+        return true
+      }
+      
+      // Filter out problematic paths
+      const problematicPaths = [
+        '/wp-admin', '/admin', '/login', '/logout', '/search',
+        '/api/', '/ajax/', '/feed', '/rss', '/sitemap',
+        '/.well-known/', '/robots.txt', '/favicon.ico'
+      ]
+      
+      if (problematicPaths.some(path => pathname.includes(path))) {
+        return true
+      }
+      
+      // Filter out URLs with problematic query parameters
+      const problematicParams = ['download', 'export', 'print', 'pdf']
+      if (problematicParams.some(param => search.includes(param))) {
+        return true
+      }
+      
+      // Filter out very long URLs (likely to be problematic)
+      if (url.length > 200) {
+        return true
+      }
+      
+      return false
+    } catch {
+      return true // If URL is malformed, consider it problematic
     }
   }
 
@@ -179,11 +275,36 @@ export class CrawlQueueServerless {
   }
 
   private async processCSSFiles(links: string[], source: string): Promise<void> {
-    for (const link of links) {
-      if (link.endsWith('.css') && !this.cssCache.has(link)) {
+    // Limit concurrent CSS requests to prevent overwhelming the server
+    const maxConcurrent = 3
+    const cssLinks = links.filter(link => link.endsWith('.css')).slice(0, 10) // Limit to 10 CSS files
+    
+    for (let i = 0; i < cssLinks.length; i += maxConcurrent) {
+      const batch = cssLinks.slice(i, i + maxConcurrent)
+      
+      await Promise.allSettled(batch.map(async (link) => {
+        if (this.cssCache.has(link)) return
+        
         try {
-          const response = await fetch(link)
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout for CSS
+          
+          const response = await fetch(link, {
+            headers: {
+              'User-Agent': this.robotsInfo?.userAgent || 'Website-Color-Palette-Crawler/1.0'
+            },
+            signal: controller.signal
+          })
+          
+          clearTimeout(timeoutId)
+          
           if (response.ok) {
+            const contentLength = response.headers.get('content-length')
+            if (contentLength && parseInt(contentLength) > 2 * 1024 * 1024) { // 2MB limit for CSS
+              console.warn(`CSS file too large: ${link}`)
+              return
+            }
+            
             const css = await response.text()
             this.cssCache.set(link, css)
             
@@ -193,6 +314,11 @@ export class CrawlQueueServerless {
         } catch (error) {
           console.warn(`Failed to fetch CSS from ${link}:`, error)
         }
+      }))
+      
+      // Small delay between batches to be polite
+      if (i + maxConcurrent < cssLinks.length) {
+        await new Promise(resolve => setTimeout(resolve, 500))
       }
     }
   }

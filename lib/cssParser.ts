@@ -54,6 +54,17 @@ export function parseHTML(html: string, source: string): ParsedStyles {
   const links: string[] = []
   
   try {
+    // Limit HTML size to prevent memory issues
+    if (html.length > 1024 * 1024) { // 1MB limit
+      html = html.substring(0, 1024 * 1024)
+    }
+    
+    // Remove problematic content that can cause hanging
+    html = html
+      .replace(/<svg[\s\S]*?<\/svg>/gi, '') // Remove SVG content
+      .replace(/<script[\s\S]*?<\/script>/gi, '') // Remove JavaScript
+      .replace(/<!--[\s\S]*?-->/g, '') // Remove comments
+    
     // Simple regex-based HTML parsing to avoid cheerio dependency issues
     const styleRegex = /style\s*=\s*["']([^"']+)["']/g
     const styleBlockRegex = /<style[^>]*>([\s\S]*?)<\/style>/g

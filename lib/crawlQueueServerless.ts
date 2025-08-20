@@ -1,4 +1,4 @@
-import { ColorInfo } from './colorUtils'
+import { ColorInfo, NormalizedColor } from './colorUtils'
 import { parseHTML, parseCSS } from './cssParser'
 import { checkRobotsTxt, isSameOrigin, isSubdomain, normalizeUrl } from './robots'
 

@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 interface SwatchProps {
   hex: string
   alphaPresent: boolean
@@ -8,6 +10,8 @@ interface SwatchProps {
 }
 
 export default function Swatch({ hex, alphaPresent, count, sampleSources }: SwatchProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
   return (
     <div className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
       <div className="flex-shrink-0">
@@ -33,14 +37,27 @@ export default function Swatch({ hex, alphaPresent, count, sampleSources }: Swat
         
         {sampleSources.length > 0 && (
           <div className="text-xs text-gray-500">
-            <div className="font-medium mb-1">Sample sources:</div>
-            <div className="space-y-1">
-              {sampleSources.map((source, index) => (
-                <div key={index} className="truncate" title={source}>
-                  {source}
-                </div>
-              ))}
-            </div>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+            >
+              <span className="text-xs">
+                {isExpanded ? '▼' : '▶'}
+              </span>
+              <span className="text-xs">
+                {sampleSources.length} source{sampleSources.length !== 1 ? 's' : ''}
+              </span>
+            </button>
+            
+            {isExpanded && (
+              <div className="mt-1 space-y-1">
+                {sampleSources.map((source, index) => (
+                  <div key={index} className="truncate" title={source}>
+                    {source}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

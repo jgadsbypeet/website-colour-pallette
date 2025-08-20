@@ -1,0 +1,13 @@
+{
+  "buildCommand": "npm run build && npx playwright install --with-deps chromium",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "functions": {
+    "app/actions/crawl.ts": {
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

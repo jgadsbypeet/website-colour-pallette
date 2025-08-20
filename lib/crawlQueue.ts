@@ -1,4 +1,3 @@
-import { chromium, Browser, Page } from 'playwright'
 import { ColorInfo } from './colorUtils'
 import { parseHTML, parseCSS } from './cssParser'
 import { checkRobotsTxt, isSameOrigin, isSubdomain, normalizeUrl } from './robots'
@@ -31,7 +30,7 @@ export interface CrawlResult {
 }
 
 export class CrawlQueue {
-  private browser: Browser | null = null
+  private browser: any = null
   private isRunning = false
   private isCancelled = false
   private queue: string[] = []
@@ -67,6 +66,9 @@ export class CrawlQueue {
         this.robotsInfo = { isAllowed: true, crawlDelay: 1000, userAgent: 'Bypass' }
       }
 
+      // Dynamically import Playwright only on the server side
+      const { chromium } = await import('playwright')
+      
       // Initialize browser
       this.browser = await chromium.launch({ headless: true })
       
@@ -187,7 +189,7 @@ export class CrawlQueue {
     }
   }
 
-  private async extractComputedColors(page: Page, source: string): Promise<ColorInfo[]> {
+  private async extractComputedColors(page: any, source: string): Promise<ColorInfo[]> {
     const colors: ColorInfo[] = []
     
     try {

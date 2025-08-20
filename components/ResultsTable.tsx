@@ -26,6 +26,7 @@ export default function ResultsTable({
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
   const [filterAlpha, setFilterAlpha] = useState<boolean | null>(null)
+  const [expandedSources, setExpandedSources] = useState<Set<number>>(new Set())
 
   const sortedAndFilteredColors = useMemo(() => {
     let filtered = colors
@@ -60,6 +61,16 @@ export default function ResultsTable({
       setSortField(field)
       setSortDirection('asc')
     }
+  }
+
+  const toggleSourceExpansion = (index: number) => {
+    const newExpanded = new Set(expandedSources)
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index)
+    } else {
+      newExpanded.add(index)
+    }
+    setExpandedSources(newExpanded)
   }
 
   const exportToCSV = () => {
@@ -254,13 +265,31 @@ export default function ResultsTable({
                     {color.count.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    <div className="space-y-1">
-                      {color.sampleSources.map((source, idx) => (
-                        <div key={idx} className="truncate max-w-xs" title={source}>
-                          {source}
-                        </div>
-                      ))}
-                    </div>
+                    {color.sampleSources.length > 0 && (
+                      <div>
+                        <button
+                          onClick={() => toggleSourceExpansion(index)}
+                          className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+                        >
+                          <span className="text-xs">
+                            {expandedSources.has(index) ? '▼' : '▶'}
+                          </span>
+                          <span className="text-xs">
+                            {color.sampleSources.length} source{color.sampleSources.length !== 1 ? 's' : ''}
+                          </span>
+                        </button>
+                        
+                        {expandedSources.has(index) && (
+                          <div className="mt-2 space-y-1">
+                            {color.sampleSources.map((source, idx) => (
+                              <div key={idx} className="truncate max-w-xs text-xs" title={source}>
+                                {source}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

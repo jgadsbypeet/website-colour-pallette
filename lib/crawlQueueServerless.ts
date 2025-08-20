@@ -94,8 +94,11 @@ export class CrawlQueueServerless {
   }
 
   getResults(): CrawlResult {
+    // Import normalizeColor here to avoid circular dependency
+    const { normalizeColor } = require('./colorUtils')
+    
     // Normalize and deduplicate colors
-    const normalizedColors = this.normalizeColors(this.allColors)
+    const normalizedColors = normalizeColor(this.allColors)
     
     return {
       colors: normalizedColors,
@@ -206,31 +209,4 @@ export class CrawlQueueServerless {
     }
   }
 
-  private normalizeColors(colors: ColorInfo[]): ColorInfo[] {
-    // Import parseColor here to avoid circular dependency
-    const { parseColor } = require('./colorUtils')
-    
-    const colorMap = new Map<string, ColorInfo>()
-    
-    for (const color of colors) {
-      const normalized = parseColor(color.value, color.source)
-      if (normalized) {
-        const key = normalized.hex
-        if (colorMap.has(key)) {
-          // Merge sources
-          const existing = colorMap.get(key)!
-          existing.sampleSources.push(...normalized.sampleSources)
-          existing.count += normalized.count
-        } else {
-          colorMap.set(key, normalized)
-        }
-      }
-    }
-    
-    // Filter by minimum count
-    const filtered = Array.from(colorMap.values()).filter(color => color.count >= this.options.minCount)
-    
-    // Sort by count (descending)
-    return filtered.sort((a, b) => b.count - a.count)
-  }
 }

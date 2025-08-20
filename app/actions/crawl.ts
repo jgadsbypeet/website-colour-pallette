@@ -1,9 +1,9 @@
 'use server'
 
-import { CrawlQueue, CrawlOptions } from '@/lib/crawlQueue'
+import { CrawlQueueServerless, CrawlOptions } from '@/lib/crawlQueueServerless'
 import { normalizeColor, filterNearDuplicates, NormalizedColor } from '@/lib/colorUtils'
 
-let currentCrawl: CrawlQueue | null = null
+let currentCrawl: CrawlQueueServerless | null = null
 
 export async function startCrawl(
   url: string,
@@ -19,7 +19,7 @@ export async function startCrawl(
     }
     
     // Create new crawl
-    currentCrawl = new CrawlQueue(url, options)
+    currentCrawl = new CrawlQueueServerless(url, options)
     
     // Start crawling in background
     currentCrawl.start().catch(error => {
@@ -63,12 +63,11 @@ export async function getCrawlResults(): Promise<{
     return null
   }
   
-  const result = currentCrawl.getResult()
+  const result = currentCrawl.getResults()
   
-  // Normalize and filter colors
-  const normalized = normalizeColor(result.colors)
+  // Filter near duplicates
   const filtered = filterNearDuplicates(
-    normalized,
+    result.colors,
     currentCrawl['options'].nearDuplicateDelta
   )
   

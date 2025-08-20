@@ -209,7 +209,7 @@ export class CrawlQueue {
           const element = elements[i]
           
           try {
-            const styles = await element.evaluate(el => {
+            const styles = await element.evaluate((el: Element) => {
               const computed = getComputedStyle(el)
               return {
                 color: computed.color,

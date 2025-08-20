@@ -1,246 +1,146 @@
-# Website Colour Palette Crawler
+# 🎨 Website Color Palette Crawler
 
-A web application that crawls websites and extracts color palettes with usage statistics. Built with Next.js 14, TypeScript, and Playwright for robust web crawling capabilities.
+A web application that crawls websites and extracts all color values from pages and stylesheets, normalizing them to 6-digit hex codes and displaying a unique list with usage counts.
 
-## Features
+## ✨ Features
 
-- **Comprehensive Color Extraction**: Parses colors from CSS files, inline styles, style attributes, and computed DOM styles
-- **Multiple Color Formats**: Supports hex, RGB, RGBA, HSL, HSLA, and CSS named colors
-- **CSS Variable Resolution**: Automatically resolves CSS custom properties and their color values
-- **Smart Deduplication**: Uses LAB color space for near-duplicate detection and filtering
-- **Robots.txt Compliance**: Respects website crawling policies by default
-- **Export Options**: CSV, JSON, and hex code list exports
-- **Real-time Progress**: Live progress tracking during crawling operations
-- **Responsive UI**: Modern, mobile-friendly interface built with Tailwind CSS
+- **Multi-format Support**: Hex, RGB/RGBA, HSL/HSLA, named colors, CSS variables
+- **CSS Variable Resolution**: Automatically resolves CSS custom properties
+- **Smart Deduplication**: Removes duplicate colors and counts occurrences
+- **Advanced Filtering**: Filter by minimum occurrence and near-duplicates (LAB delta E)
+- **Export Options**: CSV, JSON, and hex list formats
+- **Respectful Crawling**: Follows robots.txt, configurable depth and page limits
+- **Serverless Compatible**: Works on Vercel and other serverless platforms
 
-## Tech Stack
+## 🚀 Tech Stack
 
-- **Frontend**: Next.js 14 with App Router, React 18, TypeScript
-- **Styling**: Tailwind CSS
-- **Web Crawling**: Playwright (headless browser automation)
-- **HTML Parsing**: Cheerio
-- **CSS Parsing**: PostCSS with value parser
-- **Color Processing**: Colord with LAB color space support
-- **Robots.txt**: robots-txt-parse
-- **Testing**: Jest with React Testing Library
+- **Frontend**: Next.js 14 with App Router, TypeScript, Tailwind CSS
+- **Crawling**: Serverless-compatible crawler using native fetch API
+- **Color Processing**: Colord with LAB plugin for color conversions
+- **CSS Parsing**: PostCSS and postcss-value-parser
+- **Deployment**: Vercel (serverless-optimized)
 
-## Prerequisites
+## 🛠️ Setup
 
-- Node.js 18+ 
+### Prerequisites
+- Node.js 18+
 - npm or yarn
-- Playwright browsers (installed automatically)
 
-## Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd website-colour-palette
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Install Playwright browsers**
-   ```bash
-   npx playwright install
-   ```
-
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## Usage
-
-### Basic Crawling
-
-1. **Enter a website URL** in the input field
-2. **Configure crawl settings**:
-   - **Max Pages**: Maximum number of pages to crawl (default: 200)
-   - **Max Depth**: Maximum link depth to follow (default: 3)
-   - **Include Subdomains**: Whether to crawl subdomains
-   - **Bypass robots.txt**: Only enable if you own the site
-   - **Min Occurrence Count**: Filter colors by minimum usage count
-   - **Near-Duplicate Delta**: LAB color space threshold for filtering similar colors
-
-3. **Click "Start Crawl"** to begin the crawling process
-
-### Advanced Features
-
-- **Real-time Progress**: Monitor crawling progress with live updates
-- **Color Filtering**: Filter results by alpha channel presence
-- **View Modes**: Switch between table and grid views
-- **Sorting**: Sort by hex code, count, or alpha presence
-- **Export Options**: Download results as CSV or JSON, or copy hex codes
-
-## Configuration
-
-### Crawl Limits
-
-- **Default max pages**: 200
-- **Default max depth**: 3
-- **Minimum crawl delay**: 1 second (respects robots.txt)
-- **Request timeout**: 30 seconds per page
-
-### Color Processing
-
-- **Normalization**: All colors converted to 6-digit hex (uppercase)
-- **Alpha handling**: Alpha values tracked separately from main color count
-- **LAB conversion**: Colors converted to LAB color space for accurate similarity detection
-- **Near-duplicate filtering**: Uses Euclidean distance in LAB space
-
-## API Reference
-
-### Server Actions
-
-The application uses Next.js server actions for backend functionality:
-
-- `startCrawl(url, options)`: Initiates a new crawl
-- `getCrawlProgress()`: Returns current crawl progress
-- `getCrawlResults()`: Returns final crawl results
-- `cancelCrawl()`: Cancels the current crawl
-
-### Data Structures
-
-```typescript
-interface CrawlOptions {
-  maxPages: number
-  maxDepth: number
-  includeSubdomains: boolean
-  bypassRobots: boolean
-  minCount: number
-  nearDuplicateDelta: number
-}
-
-interface NormalizedColor {
-  hex: string
-  alphaPresent: boolean
-  count: number
-  sampleSources: string[]
-  lab: { l: number; a: number; b: number }
-}
-```
-
-## Testing
-
-Run the test suite:
-
+### Installation
 ```bash
-# Run all tests
-npm test
+# Clone the repository
+git clone <your-repo-url>
+cd website-colour-pallette
 
-# Run tests in watch mode
-npm run test:watch
+# Install dependencies
+npm install
 
-# Run tests with coverage
-npm test -- --coverage
+# Start development server
+npm run dev
 ```
 
-### Test Coverage
-
-- **Color utilities**: Parsing, normalization, filtering, and export functions
-- **CSS parsing**: HTML and CSS color extraction
-- **Robots.txt handling**: Compliance checking and URL filtering
-- **Integration tests**: End-to-end crawl functionality
-
-## Performance Considerations
-
-### Memory Usage
-
-- **In-memory storage**: All crawl data stored in memory (no database)
-- **CSS caching**: External CSS files cached during crawl to avoid refetching
-- **Element sampling**: Limited DOM element sampling for computed styles
-
-### Rate Limiting
-
-- **Respects robots.txt**: Automatically follows crawl delay directives
-- **Minimum delays**: 1-second minimum between requests
-- **User agent**: Polite, identifiable user agent string
-
-### Scalability
-
-- **Page limits**: Configurable maximum page count
-- **Depth limits**: Configurable link depth traversal
-- **Cancellation**: Crawl can be cancelled at any time
-
-## Ethical Considerations
-
-### Responsible Crawling
-
-- **Robots.txt compliance**: Enabled by default
-- **Rate limiting**: Respects website performance
-- **User agent identification**: Clear identification of crawler purpose
-- **Ownership verification**: Bypass option only for site owners
-
-### Best Practices
-
-- **Test on your own sites first**
-- **Respect crawl limits and delays**
-- **Monitor for errors and adjust settings**
-- **Use appropriate depth and page limits**
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Playwright installation errors**
-   ```bash
-   npx playwright install --force
-   ```
-
-2. **Memory issues with large sites**
-   - Reduce max pages and depth
-   - Increase crawl delays
-   - Monitor system resources
-
-3. **Timeout errors**
-   - Check network connectivity
-   - Increase timeout values in code
-   - Verify target site accessibility
-
-4. **Color parsing issues**
-   - Check browser console for errors
-   - Verify CSS syntax in target site
-   - Test with simpler sites first
-
-### Debug Mode
-
-Enable detailed logging by setting environment variables:
-
+### Environment Variables
+Copy `env.example` to `.env.local` and configure:
 ```bash
-DEBUG=playwright:* npm run dev
+MAX_PAGES=50
+MAX_DEPTH=3
+CRAWL_DELAY=1000
+USER_AGENT=Website-Color-Palette-Crawler/1.0
 ```
 
-## Contributing
+## 🎯 Usage
+
+1. **Enter a URL** to crawl
+2. **Configure options**:
+   - Max Pages: Limit total pages crawled
+   - Max Depth: Limit crawl depth
+   - Include Subdomains: Crawl subdomains
+   - Bypass robots.txt: Skip robots.txt checking
+   - Min Count: Filter colors by minimum occurrence
+   - Near Duplicate Delta: LAB color space threshold
+
+3. **Start crawling** and monitor progress
+4. **View results** in table or grid format
+5. **Export data** in your preferred format
+
+## 🔧 Development
+
+### Scripts
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run test         # Run tests
+npm run test:watch   # Run tests in watch mode
+```
+
+### Project Structure
+```
+├── app/                 # Next.js App Router pages
+├── components/          # React components
+├── lib/                 # Utility libraries
+├── scripts/             # Build and deployment scripts
+├── test-site/           # Local test site for development
+└── __tests__/           # Test files
+```
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+1. Push code to GitHub
+2. Import repository in Vercel
+3. Deploy automatically
+
+### Manual Deployment
+```bash
+# Build the project
+npm run build
+
+# Deploy using Vercel CLI
+vercel --prod
+```
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+npm run test
+```
+
+### Integration Tests
+```bash
+# Start test server
+cd test-site && python3 -m http.server 8000
+
+# Run tests
+npm run test
+```
+
+## 📊 Performance
+
+- **Serverless Optimized**: No browser binaries needed
+- **Efficient Parsing**: Regex-based HTML parsing
+- **Smart Caching**: CSS file caching to avoid re-downloads
+- **Rate Limiting**: Configurable delays between requests
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests for new functionality
+4. Add tests if applicable
 5. Submit a pull request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is open source and available under the [MIT License](LICENSE).
 
-## Acknowledgments
+## 🆘 Support
 
-- **Playwright**: For robust web automation capabilities
-- **Colord**: For comprehensive color manipulation and conversion
-- **Tailwind CSS**: For the beautiful, responsive UI components
-- **Next.js**: For the modern React framework and server actions
+- **Issues**: Create a GitHub issue
+- **Documentation**: Check the code comments and README
+- **Deployment**: See `DEPLOYMENT.md` for detailed guides
 
-## Support
+---
 
-For issues, questions, or contributions:
-
-1. Check the troubleshooting section above
-2. Review existing GitHub issues
-3. Create a new issue with detailed information
-4. Include error messages, browser console logs, and reproduction steps 
+**Last Updated**: August 20, 2025 - Serverless deployment ready! 🚀 

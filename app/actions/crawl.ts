@@ -63,7 +63,7 @@ export async function getCrawlResults(): Promise<{
     return null
   }
   
-  const result = currentCrawl.getResults()
+  const result = await currentCrawl.getResults()
   
   // Filter near duplicates
   const filtered = filterNearDuplicates(

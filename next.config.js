@@ -5,7 +5,7 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // Client-side: exclude Playwright and other Node.js modules
+      // Client-side: exclude Node.js modules
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
@@ -15,22 +15,37 @@ const nextConfig = {
         'playwright': false,
       }
     } else {
-      // Server-side: allow Playwright
+      // Server-side: allow necessary modules
       config.externals = config.externals || []
       config.externals.push({
         'playwright': 'commonjs playwright',
       })
     }
+    
+    // Tree shaking optimizations
+    config.optimization = {
+      ...config.optimization,
+      usedExports: true,
+      sideEffects: false,
+    }
+    
     return config
   },
   // Production optimizations
   output: 'standalone',
   poweredByHeader: false,
   compress: true,
-  // Production optimizations
-  output: 'standalone',
-  poweredByHeader: false,
+  // Bundle analysis
+  bundleAnalyzer: process.env.ANALYZE === 'true',
+  // Image optimization
+  images: {
+    formats: ['image/webp'],
+    minimumCacheTTL: 60,
+  },
+  // Compression
   compress: true,
+  // Performance optimizations
+  swcMinify: true,
 }
 
 module.exports = nextConfig 

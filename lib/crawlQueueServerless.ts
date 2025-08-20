@@ -93,9 +93,9 @@ export class CrawlQueueServerless {
     }
   }
 
-  getResults(): CrawlResult {
-    // Import normalizeColor here to avoid circular dependency
-    const { normalizeColor } = require('./colorUtils')
+  async getResults(): Promise<CrawlResult> {
+    // Lazy load normalizeColor to reduce initial bundle size
+    const { normalizeColor } = await import('./colorUtils')
     
     // Normalize and deduplicate colors
     const normalizedColors = normalizeColor(this.allColors)

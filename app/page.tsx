@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CrawlOptions } from '@/lib/crawlQueue'
+import { CrawlOptions } from '@/lib/crawlQueueServerless'
 import { NormalizedColor } from '@/lib/colorUtils'
 import { startCrawl, getCrawlProgress, getCrawlResults, cancelCrawl } from './actions/crawl'
 import UrlForm from '@/components/UrlForm'

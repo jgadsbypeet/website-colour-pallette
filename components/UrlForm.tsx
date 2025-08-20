@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CrawlOptions } from '@/lib/crawlQueue'
+import { CrawlOptions } from '@/lib/crawlQueueServerless'
 
 interface UrlFormProps {
   onStartCrawl: (url: string, options: CrawlOptions) => void

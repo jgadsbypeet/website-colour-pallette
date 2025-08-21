@@ -52,6 +52,14 @@ export async function getCrawlProgress(): Promise<{
   return currentCrawl.getProgress()
 }
 
+export async function getCrawlDebugInfo(): Promise<any | null> {
+  if (!currentCrawl) {
+    return null
+  }
+  
+  return currentCrawl.getDebugInfo()
+}
+
 export async function getCrawlResults(): Promise<{
   colors: NormalizedColor[]
   pagesCrawled: string[]

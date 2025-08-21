@@ -97,6 +97,20 @@ export class CrawlQueueServerless {
     }
   }
 
+  getDebugInfo(): any {
+    return {
+      options: this.options,
+      queueLength: this.queue.length,
+      visitedCount: this.visited.size,
+      pagesCrawled: this.pagesCrawled.length,
+      errors: this.errors,
+      colorsFound: this.allColors.length,
+      cssCacheSize: this.cssCache.size,
+      isCancelled: this.isCancelled,
+      robotsInfo: this.robotsInfo
+    }
+  }
+
   async getResults(): Promise<CrawlResult> {
     // Lazy load normalizeColor to reduce initial bundle size
     const { normalizeColor } = await import('./colorUtils')
@@ -117,16 +131,24 @@ export class CrawlQueueServerless {
     const startTime = Date.now()
     const maxCrawlTime = 5 * 60 * 1000 // 5 minute maximum crawl time
     
+    console.log(`Starting crawl queue with max pages: ${this.options.maxPages}, max depth: ${this.options.maxDepth}`)
+    
     while (this.queue.length > 0 && !this.isCancelled && this.pagesCrawled.length < this.options.maxPages) {
       // Check for timeout
       if (Date.now() - startTime > maxCrawlTime) {
-        this.errors.push('Crawl timeout: Maximum crawl time exceeded (5 minutes)')
+        const timeoutMsg = 'Crawl timeout: Maximum crawl time exceeded (5 minutes)'
+        console.warn(timeoutMsg)
+        this.errors.push(timeoutMsg)
         break
       }
       
       const url = this.queue.shift()!
+      console.log(`Processing URL from queue: ${url}`)
       
-      if (this.visited.has(url)) continue
+      if (this.visited.has(url)) {
+        console.log(`Skipping already visited URL: ${url}`)
+        continue
+      }
       this.visited.add(url)
       
       try {
@@ -141,6 +163,7 @@ export class CrawlQueueServerless {
         
         // Respect crawl delay but with minimum
         const delay = Math.max(this.robotsInfo?.crawlDelay || 1000, 500) // Minimum 500ms delay
+        console.log(`Waiting ${delay}ms before next crawl...`)
         await new Promise(resolve => setTimeout(resolve, delay))
         
         // Early termination if we have enough colors
@@ -149,9 +172,18 @@ export class CrawlQueueServerless {
           break
         }
         
+        // Check if queue is empty and we've crawled at least one page
+        if (this.queue.length === 0 && this.pagesCrawled.length > 0) {
+          console.log('Early termination: Queue is empty, no more URLs to crawl')
+          break
+        }
+        
+        console.log(`Queue status: ${this.queue.length} URLs remaining, ${this.pagesCrawled.length} pages crawled`)
+        
       } catch (error) {
-        this.errors.push(`Failed to crawl ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`)
-        console.warn(`Error crawling ${url}:`, error)
+        const errorMsg = `Failed to crawl ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        console.error(errorMsg, error)
+        this.errors.push(errorMsg)
         
         // Continue with next URL instead of failing completely
         continue
@@ -160,6 +192,7 @@ export class CrawlQueueServerless {
     
     // Ensure we stop processing when done
     console.log(`Crawl completed. Pages crawled: ${this.pagesCrawled.length}, Colors found: ${this.allColors.length}`)
+    console.log(`Final queue length: ${this.queue.length}, Errors: ${this.errors.length}`)
     
     // Clear the queue to ensure completion is detected
     this.queue.length = 0
@@ -167,6 +200,8 @@ export class CrawlQueueServerless {
 
   private async crawlPage(url: string): Promise<void> {
     try {
+      console.log(`Starting to crawl: ${url}`)
+      
       // Add timeout and better error handling
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
@@ -184,6 +219,7 @@ export class CrawlQueueServerless {
       })
       
       clearTimeout(timeoutId)
+      console.log(`Response received: ${response.status} ${response.statusText}`)
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -191,6 +227,7 @@ export class CrawlQueueServerless {
 
       // Check content type to ensure we're processing HTML
       const contentType = response.headers.get('content-type') || ''
+      console.log(`Content type: ${contentType}`)
       if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
         throw new Error(`Invalid content type: ${contentType}`)
       }
@@ -202,18 +239,24 @@ export class CrawlQueueServerless {
       }
 
       const html = await response.text()
+      console.log(`HTML content length: ${html.length} characters`)
       
       // Parse HTML for colors and links
       const parsed = parseHTML(html, url)
+      console.log(`Parsed: ${parsed.colors.length} colors, ${parsed.links.length} links`)
       this.allColors.push(...parsed.colors)
       
       // Process CSS files only if we haven't reached max pages
       if (this.pagesCrawled.length < this.options.maxPages) {
+        console.log(`Processing CSS files for: ${url}`)
         await this.processCSSFiles(parsed.links, url)
+      } else {
+        console.log(`Skipping CSS processing - max pages reached`)
       }
       
       // Add new links to queue (respecting depth limit) only if we haven't reached max pages
       if (this.getUrlDepth(url) < this.options.maxDepth && this.pagesCrawled.length < this.options.maxPages) {
+        console.log(`Adding links to queue for: ${url}`)
         // Filter and limit links to prevent overwhelming the queue
         const validLinks = parsed.links
           .slice(0, 20) // Limit links per page
@@ -226,12 +269,17 @@ export class CrawlQueueServerless {
             !this.isProblematicUrl(link) // Filter out problematic URLs
           )
         
+        console.log(`Valid links found: ${validLinks.length}`)
         this.queue.push(...validLinks.slice(0, 10)) // Limit new URLs added per page
+      } else {
+        console.log(`Skipping link queue - depth limit or max pages reached`)
       }
       
       this.pagesCrawled.push(url)
+      console.log(`Successfully crawled: ${url}`)
       
     } catch (error) {
+      console.error(`Error crawling ${url}:`, error)
       throw new Error(`Failed to fetch ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -297,13 +345,20 @@ export class CrawlQueueServerless {
     const maxConcurrent = 3
     const cssLinks = links.filter(link => link.endsWith('.css')).slice(0, 10) // Limit to 10 CSS files
     
+    console.log(`Processing ${cssLinks.length} CSS files for: ${source}`)
+    
     for (let i = 0; i < cssLinks.length; i += maxConcurrent) {
       const batch = cssLinks.slice(i, i + maxConcurrent)
+      console.log(`Processing CSS batch ${Math.floor(i/maxConcurrent) + 1}: ${batch.length} files`)
       
       await Promise.allSettled(batch.map(async (link) => {
-        if (this.cssCache.has(link)) return
+        if (this.cssCache.has(link)) {
+          console.log(`CSS already cached: ${link}`)
+          return
+        }
         
         try {
+          console.log(`Fetching CSS: ${link}`)
           const controller = new AbortController()
           const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout for CSS
           
@@ -327,7 +382,10 @@ export class CrawlQueueServerless {
             this.cssCache.set(link, css)
             
             const colors = parseCSS(css, link)
+            console.log(`CSS parsed: ${colors.length} colors from ${link}`)
             this.allColors.push(...colors)
+          } else {
+            console.warn(`CSS fetch failed: ${link} - ${response.status}`)
           }
         } catch (error) {
           console.warn(`Failed to fetch CSS from ${link}:`, error)
@@ -336,9 +394,12 @@ export class CrawlQueueServerless {
       
       // Small delay between batches to be polite
       if (i + maxConcurrent < cssLinks.length) {
+        console.log(`Waiting 500ms before next CSS batch...`)
         await new Promise(resolve => setTimeout(resolve, 500))
       }
     }
+    
+    console.log(`CSS processing completed for: ${source}`)
   }
 
   private shouldCrawlLink(link: string): boolean {

@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { startCrawl, getCrawlProgress, getCrawlResults } from '../actions/crawl'
+import { startCrawl, getCrawlProgress, getCrawlResults, getCrawlDebugInfo } from '../actions/crawl'
 
 export default function TestActions() {
   const [status, setStatus] = useState('')
   const [progress, setProgress] = useState<any>(null)
   const [results, setResults] = useState<any>(null)
+  const [debugInfo, setDebugInfo] = useState<any>(null)
 
   const testStartCrawl = async () => {
     setStatus('Testing startCrawl...')
@@ -47,6 +48,17 @@ export default function TestActions() {
     }
   }
 
+  const testGetDebugInfo = async () => {
+    setStatus('Testing getCrawlDebugInfo...')
+    try {
+      const response = await getCrawlDebugInfo()
+      setDebugInfo(response)
+      setStatus(`getCrawlDebugInfo result: ${JSON.stringify(response)}`)
+    } catch (error) {
+      setStatus(`getCrawlDebugInfo error: ${error}`)
+    }
+  }
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Test Server Actions</h1>
@@ -72,6 +84,13 @@ export default function TestActions() {
         >
           Test getCrawlResults
         </button>
+        
+        <button 
+          onClick={testGetDebugInfo}
+          className="bg-orange-500 text-white px-4 py-2 rounded ml-2"
+        >
+          Test getCrawlDebugInfo
+        </button>
       </div>
       
       <div className="mt-6">
@@ -90,6 +109,13 @@ export default function TestActions() {
         <div className="mt-6">
           <h2 className="text-xl font-bold mb-2">Results:</h2>
           <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(results, null, 2)}</pre>
+        </div>
+      )}
+      
+      {debugInfo && (
+        <div className="mt-6">
+          <h2 className="text-xl font-bold mb-2">Debug Info:</h2>
+          <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(debugInfo, null, 2)}</pre>
         </div>
       )}
     </div>
